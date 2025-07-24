@@ -77,8 +77,13 @@ const scenarios = {
 };
 
 async function testWebhook(scenario = 'order-status') {
+    // Support both environment variable and command line URL
     const webhookUrl = process.env.WEBHOOK_URL || 'http://localhost:3000/webhook';
     const webhookSecret = process.env.WEBHOOK_SECRET || 'test-secret';
+    
+    // Allow overriding via command line
+    const urlArg = process.argv.find(arg => arg.startsWith('--url='));
+    const finalUrl = urlArg ? urlArg.split('=')[1] : webhookUrl;
     
     if (!scenarios[scenario]) {
         console.error(`❌ Unknown scenario: ${scenario}`);
@@ -96,10 +101,10 @@ async function testWebhook(scenario = 'order-status') {
     
     try {
         console.log(`🚀 Testing webhook with scenario: ${scenario}`);
-        console.log(`📍 URL: ${webhookUrl}`);
+        console.log(`📍 URL: ${finalUrl}`);
         console.log(`📦 Payload:`, JSON.stringify(payload, null, 2));
         
-        const response = await axios.post(webhookUrl, payload, {
+        const response = await axios.post(finalUrl, payload, {
             headers: {
                 'X-Hub-Signature': signature,
                 'Content-Type': 'application/json'
@@ -121,6 +126,23 @@ async function testWebhook(scenario = 'order-status') {
 const args = process.argv.slice(2);
 const scenarioArg = args.find(arg => arg.startsWith('--scenario='));
 const scenario = scenarioArg ? scenarioArg.split('=')[1] : 'order-status';
+
+// Show usage if --help
+if (process.argv.includes('--help')) {
+    console.log('Usage: npm run test:webhook -- [options]');
+    console.log('\nOptions:');
+    console.log('  --scenario=<name>   Test scenario (default: order-status)');
+    console.log('  --url=<url>         Override webhook URL');
+    console.log('  --help              Show this help message');
+    console.log('\nAvailable scenarios:');
+    Object.keys(scenarios).forEach(s => console.log(`  - ${s}`));
+    console.log('\nExamples:');
+    console.log('  npm run test:webhook');
+    console.log('  npm run test:webhook -- --scenario=foodpanda');
+    console.log('  npm run test:webhook -- --url=https://beep-chatbot-api.onrender.com/webhook');
+    console.log('  WEBHOOK_URL=https://beep-chatbot-api.onrender.com/webhook npm run test:webhook');
+    process.exit(0);
+}
 
 // Run test
 testWebhook(scenario);

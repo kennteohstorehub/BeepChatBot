@@ -1,0 +1,86 @@
+# render.yaml - Render deployment configuration
+services:
+  # Main webhook service
+  - type: web
+    name: beep-chatbot-api
+    env: node
+    plan: starter # Change to 'pro' for production
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - fromGroup: beep-secrets
+      - fromGroup: beep-config
+    autoDeploy: true # Automatically deploy on push to main branch
+    
+  # Background worker for processing
+  - type: worker
+    name: beep-chatbot-worker
+    env: node
+    plan: starter # Change to 'pro' for production
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm run start:worker
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - fromGroup: beep-secrets
+      - fromGroup: beep-config
+    autoDeploy: true
+
+# Redis for queuing and caching
+databases:
+  - name: beep-redis
+    type: redis
+    plan: starter # Change to 'pro' for production
+    region: singapore
+    ipAllowList: [] # Allow connections from Render services
+
+# Environment variable groups
+envVarGroups:
+  # Sensitive credentials - Fill these in Render dashboard
+  - name: beep-secrets
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: INTERCOM_ACCESS_TOKEN
+        sync: false
+      - key: WEBHOOK_SECRET
+        sync: false
+      - key: LALAMOVE_API_KEY
+        sync: false
+      - key: LALAMOVE_API_SECRET
+        sync: false
+      - key: FOODPANDA_API_KEY
+        sync: false
+      - key: IST_API_KEY
+        sync: false
+      
+  # Non-sensitive configuration
+  - name: beep-config
+    envVars:
+      - key: INTERCOM_BOT_ADMIN_ID
+        value: "1234567" # Update with your actual bot admin ID
+      - key: SUPPORT_TEAM_ID
+        value: "2345678" # Update with your actual team ID
+      - key: IST_API_URL
+        value: https://api.storehub.com
+      - key: FOODPANDA_API_URL
+        value: https://api.foodpanda.my
+      - key: ENABLE_LALAMOVE
+        value: "true"
+      - key: ENABLE_FOODPANDA
+        value: "true"
+      - key: CACHE_TTL_SECONDS
+        value: "300"
+      - key: MAX_CONCURRENT_JOBS
+        value: "10"
+      - key: JOB_TIMEOUT_MS
+        value: "30000"
+      - key: API_TIMEOUT_MS
+        value: "5000"
+      - key: LOG_LEVEL
+        value: "info"

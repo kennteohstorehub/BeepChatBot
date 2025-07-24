@@ -56,21 +56,24 @@ You'll need accounts and API credentials for:
 - [ ] **Foodpanda API** - Contact partner support
 - [ ] **IST API** - Internal StoreHub service
 
-### 3. Local Testing with Real Services
+### 3. Deploy to Render First
+
+Since you're using Render, you need to deploy before setting up Intercom webhooks:
 
 ```bash
 # 1. Configure your .env with real credentials
 npm run setup
 
-# 2. Set up database
-npm run migrate
+# 2. Deploy to Render
+# Option A: Use Render Dashboard to create Blueprint from your repo
+# Option B: Use Render CLI
+# The render.yaml file is already configured in the repo
 
-# 3. Start services
-npm run dev:all
+# 3. After deployment, get your Render URL:
+# https://beep-chatbot-api.onrender.com
 
-# 4. Use ngrok for webhook testing
-ngrok http 3000
-# Update Intercom webhook URL with ngrok URL
+# 4. Configure Intercom webhook with Render URL
+# Go to Intercom Developer Hub and set webhook URL
 ```
 
 ## 🧪 Testing Order Queries

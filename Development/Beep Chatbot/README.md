@@ -44,10 +44,14 @@ An intelligent chatbot for Intercom that automates customer order status inquiri
    npm run migrate
    ```
 
-5. **Configure Intercom webhook**
+5. **Deploy to Render first**
+   - Deploy using the included `render.yaml`
+   - Get your Render URL (e.g., `https://beep-chatbot-api.onrender.com`)
+
+6. **Configure Intercom webhook**
    - Go to Intercom Developer Hub
    - Create a new app or use existing
-   - Set webhook endpoint to: `https://your-domain.com/webhook`
+   - Set webhook endpoint to: `https://beep-chatbot-api.onrender.com/webhook`
    - Subscribe to `conversation.user.replied` topic
    - Copy the webhook secret to your `.env`
 

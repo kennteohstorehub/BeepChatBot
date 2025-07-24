@@ -25,11 +25,10 @@ This guide walks you through all the steps needed to set up Intercom and other s
 - [ ] Copy the token → Save as `INTERCOM_ACCESS_TOKEN`
 
 #### 3. Configure Webhook
+- [ ] First deploy to Render (see Deployment section below)
 - [ ] In your developer app, go to "Webhooks"
 - [ ] Click "New webhook"
-- [ ] Set webhook URL:
-  - Development: `https://YOUR-NGROK-URL.ngrok.io/webhook`
-  - Production: `https://YOUR-APP.onrender.com/webhook`
+- [ ] Set webhook URL: `https://YOUR-APP-NAME.onrender.com/webhook`
 - [ ] Select topic: `conversation.user.replied`
 - [ ] Save webhook
 - [ ] Copy the webhook secret → Save as `WEBHOOK_SECRET`
@@ -167,42 +166,70 @@ npm run migrate
 npm run dev:all
 ```
 
-## 🧪 Testing Webhook Locally
+## 🚀 Deployment to Render (Required First)
 
-### 1. Install ngrok
-```bash
-brew install ngrok  # macOS
-# or download from https://ngrok.com
-```
+Since you're using Render instead of ngrok, you'll need to deploy first before configuring the webhook:
 
-### 2. Start ngrok tunnel
-```bash
-ngrok http 3000
-```
+### 1. Initial Render Deployment
 
-### 3. Update Intercom webhook URL
-- Copy ngrok URL (e.g., https://abc123.ngrok.io)
-- Update webhook in Intercom to: https://abc123.ngrok.io/webhook
+#### Option A: Using Render Dashboard
+1. Go to https://render.com
+2. Connect your GitHub repository
+3. Create New Web Service:
+   - Name: `beep-chatbot-api`
+   - Environment: Node
+   - Build Command: `npm install`
+   - Start Command: `npm start`
+   - Add environment variables (use placeholder values for now)
+4. Create Background Worker:
+   - Name: `beep-chatbot-worker`
+   - Environment: Node
+   - Build Command: `npm install`
+   - Start Command: `npm run start:worker`
+   - Same environment variables as API
 
-### 4. Test webhook
-```bash
-npm run test:webhook
-```
+#### Option B: Using render.yaml (Recommended)
+1. The repository already includes `render.yaml`
+2. In Render Dashboard:
+   - New → Blueprint
+   - Connect GitHub repository
+   - Render will auto-detect the render.yaml
+   - Follow the prompts
 
-## 🚀 Production Deployment
+### 2. Get Your Render URLs
+After deployment, you'll have:
+- API URL: `https://beep-chatbot-api.onrender.com`
+- Use this for your Intercom webhook
 
-### Render.com Setup
-1. Connect GitHub repository
-2. Create Web Service for API
-3. Create Background Worker for queue processor
-4. Add environment variables from .env
-5. Deploy!
+### 3. Configure Webhook with Render URL
+Now go back to Intercom and set the webhook URL to your Render deployment.
+
+## 🧪 Testing Your Deployment
+
+### Test Webhook on Render
+Once deployed to Render:
+
+1. **Check Health Endpoint**
+   ```bash
+   curl https://beep-chatbot-api.onrender.com/health
+   ```
+
+2. **Test Webhook Directly**
+   ```bash
+   # Update WEBHOOK_URL in test script to your Render URL
+   WEBHOOK_URL=https://beep-chatbot-api.onrender.com/webhook npm run test:webhook
+   ```
+
+3. **Monitor Logs in Render**
+   - Go to your service in Render Dashboard
+   - Click on "Logs" tab
+   - Watch for incoming webhook events
 
 ### Verify Deployment
-- [ ] Health check: https://your-app.onrender.com/health
-- [ ] Update Intercom webhook URL to production URL
-- [ ] Send test message in Intercom
-- [ ] Monitor logs for processing
+- [ ] Health check returns healthy status
+- [ ] Webhook test receives 200 OK response
+- [ ] Logs show webhook processing
+- [ ] Worker logs show job processing
 
 ## 📊 Post-Setup Verification
 
