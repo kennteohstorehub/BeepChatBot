@@ -2,13 +2,13 @@
 class OrderProcessor {
     constructor() {
         this.orderPatterns = [
-            /order\s*#?\s*(\w+)/i,
-            /pesanan\s*#?\s*(\w+)/i,
-            /tracking\s*#?\s*(\w+)/i,
-            /mana\s+(?:order|pesanan)\s*(\w+)/i,
-            /where.*order\s*(\w+)/i,
-            /track.*\s+(\w+)/i,
-            /\b([A-Z]{2,3}\d{8,10})\b/
+            /\b([A-Z]{2,3}\d{8,10})\b/,  // Priority pattern for order IDs
+            /order\s*#?\s*([A-Z0-9]+)/i,
+            /pesanan\s*#?\s*([A-Z0-9]+)/i,
+            /tracking\s*#?\s*([A-Z0-9]+)/i,
+            /mana\s+(?:order|pesanan)\s*([A-Z0-9]+)/i,
+            /where.*order\s*([A-Z0-9]+)/i,
+            /track.*\s+([A-Z0-9]+)/i
         ];
         
         this.platformPatterns = {
@@ -24,7 +24,8 @@ class OrderProcessor {
         // Check if it's an order-related query
         const orderKeywords = [
             'order', 'pesanan', 'where', 'mana', 'status', 
-            'track', 'delivery', 'penghantaran', 'check'
+            'track', 'delivery', 'penghantaran', 'check',
+            'tolong', 'cek', 'di mana'  // Additional Malay keywords
         ];
         
         const hasOrderKeyword = orderKeywords.some(keyword => 
@@ -139,4 +140,66 @@ In the meantime, please double-check your order confirmation email/SMS for the c
     }
 }
 
-module.exports = { OrderProcessor };
+// Helper functions for tests
+function extractOrderInfo(message) {
+    const processor = new OrderProcessor();
+    return processor.extractOrderInfo(message);
+}
+
+function formatStatusResponse(orderData) {
+    const processor = new OrderProcessor();
+    
+    // Transform data to expected format
+    const orderStatus = {
+        platform: orderData.platform,
+        status: orderData.status ? orderData.status.replace(/_/g, ' ').toLowerCase() : 'unknown',
+        rawStatus: orderData.status,
+        driver: orderData.driverInfo,
+        rider: orderData.delivery,
+        estimatedTime: orderData.estimatedCompletedAt || orderData.estimated_delivery_time,
+        trackingUrl: orderData.shareLink || orderData.tracking_url,
+        orderNumber: orderData.orderId || orderData.order_id
+    };
+    
+    // Handle different status formats
+    if (orderStatus.status === 'picked up') {
+        orderStatus.status = 'Your order has been picked up and is on the way';
+    } else if (orderStatus.status === 'in transit') {
+        orderStatus.status = 'Your order has been picked up and is on the way';
+    } else if (orderStatus.status === 'pending') {
+        orderStatus.status = 'Finding a driver for your order';
+    }
+    
+    // Build response
+    let response = `📦 Your order ${orderStatus.orderNumber} has been ${orderStatus.rawStatus ? orderStatus.rawStatus.toLowerCase().replace(/_/g, ' ') : 'found'}!\n\n`;
+    
+    if (orderStatus.driver?.name) {
+        response += `Driver: ${orderStatus.driver.name}\n`;
+        if (orderStatus.driver.phone) response += `Contact: ${orderStatus.driver.phone}\n`;
+        if (orderStatus.driver.plateNumber) response += `Vehicle: ${orderStatus.driver.plateNumber}\n`;
+    }
+    
+    if (orderStatus.rider?.rider_name) {
+        response += `Rider: ${orderStatus.rider.rider_name}\n`;
+        if (orderStatus.rider.rider_contact) response += `Contact: ${orderStatus.rider.rider_contact}\n`;
+    }
+    
+    if (orderData.restaurant_name) {
+        response += `Restaurant: ${orderData.restaurant_name}\n`;
+    }
+    
+    if (orderData.delivery_partner) {
+        response += `Delivery Partner: ${orderData.delivery_partner.charAt(0).toUpperCase() + orderData.delivery_partner.slice(1)}\n`;
+        if (orderData.delivery_tracking_id) {
+            response += `Tracking ID: ${orderData.delivery_tracking_id}\n`;
+        }
+    }
+    
+    if (orderStatus.trackingUrl) {
+        response += `\nTrack your order: ${orderStatus.trackingUrl}`;
+    }
+    
+    return response;
+}
+
+module.exports = { OrderProcessor, extractOrderInfo, formatStatusResponse };

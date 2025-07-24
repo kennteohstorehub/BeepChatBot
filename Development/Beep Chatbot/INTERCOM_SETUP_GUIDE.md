@@ -92,26 +92,22 @@ Create these tags in Settings → Tags:
 
 ### Infrastructure Setup (Development Environment)
 
-#### 10. Neon PostgreSQL Database (Development)
-- [ ] Go to https://neon.tech
-- [ ] Create new project: "beep-chatbot-dev"
-- [ ] Choose region: Singapore (or closest)
-- [ ] Branch: Keep default "main" branch for dev
-- [ ] Copy connection string → Save as `DATABASE_URL`
-- [ ] Enable connection pooling
-- [ ] Note: This is your development database - safe to experiment!
-- [ ] Free tier is perfect for development
+#### 10. Neon PostgreSQL Database (Development) ✅ COMPLETED
+- [x] Created Neon project: "BeepChatBot"
+- [x] Region: Singapore (ap-southeast-1)
+- [x] Database name: neondb
+- [x] Using pooled connection string
+- [x] DATABASE_URL configured in Render
+- [x] Free tier: 0.5 GB storage
 
-#### 11. Redis Setup (Choose one)
-
-**Render Redis (Development)**
-- [ ] Go to https://render.com
-- [ ] Create new Redis instance
-- [ ] Name: "beep-redis-dev"
-- [ ] Choose plan: **Free** (perfect for development)
-- [ ] Region: Singapore
-- [ ] Copy Internal Redis URL → Save as `REDIS_URL`
-- [ ] Note: Free tier has 25MB storage - plenty for dev testing!
+#### 11. Redis Setup ✅ COMPLETED
+- [x] Using Upstash Redis (Render doesn't offer free Redis)
+- [x] Created database: "beep-redis-dev"
+- [x] Region: Asia Pacific (Singapore)
+- [x] Endpoint: maximum-grub-60807.upstash.io:6379
+- [x] Using rediss:// for TLS connection
+- [x] REDIS_URL configured in Render
+- [x] Free tier: 10,000 commands/day
 
 ## 🔧 Local Development Setup
 
@@ -180,21 +176,21 @@ npm run dev:all
 
 We'll deploy everything to a development environment first - this is your safe space to experiment!
 
-### 1. Initial Render Development Deployment
+### 1. Initial Render Development Deployment ✅ COMPLETED
 
-#### Using Render Dashboard (Development Services)
-1. Go to https://render.com
-2. Connect your GitHub repository
-3. Create New Web Service:
-   - Name: `beep-chatbot-api-dev`
-   - Environment: Node
-   - Build Command: `npm install`
-   - Start Command: `npm start`
-   - Plan: **Free** (perfect for development)
-   - Add environment variables (use test/placeholder values)
-4. Create Background Worker:
+#### Web Service Created:
+- [x] Service Name: BeepChatBot
+- [x] Service ID: srv-d20t6695pdvs739e186g
+- [x] Build Command: `npm install`
+- [x] Start Command: `npm start`
+- [x] Region: Singapore
+- [x] Plan: Free tier
+- [x] All environment variables configured
+- [x] Currently deployed and running
+
+#### Still Need to Create:
+- [ ] Background Worker Service:
    - Name: `beep-chatbot-worker-dev`
-   - Environment: Node
    - Build Command: `npm install`
    - Start Command: `npm run start:worker`
    - Plan: **Free**
@@ -206,10 +202,11 @@ We'll deploy everything to a development environment first - this is your safe s
 - This is perfect for development testing and costs $0
 - Logs are retained even when services sleep
 
-### 2. Get Your Development URLs
-After deployment, you'll have:
-- API URL: `https://beep-chatbot-api-dev.onrender.com`
-- This is your development webhook URL
+### 2. Get Your Development URLs ✅ COMPLETED
+Your deployed service URLs:
+- API URL: `https://beepchatbot-development.onrender.com`
+- Webhook URL: `https://beepchatbot-development.onrender.com/webhook`
+- Health Check: `https://beepchatbot-development.onrender.com/health`
 
 ### 3. Configure Webhook with Development URL
 Now go back to your development Intercom workspace and set the webhook URL.
@@ -221,7 +218,7 @@ Once deployed to Render:
 
 1. **Check Health Endpoint**
    ```bash
-   curl https://beep-chatbot-api-dev.onrender.com/health
+   curl https://beepchatbot-development.onrender.com/health
    ```
    Note: First request might take 30-60 seconds if service was sleeping
 

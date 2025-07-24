@@ -1,10 +1,13 @@
 # render.yaml - Render deployment configuration
+# Note: This file is for PRODUCTION deployment using Blueprint
+# For DEVELOPMENT, create services manually to use free tier
+
 services:
   # Main webhook service
   - type: web
     name: beep-chatbot-api
     env: node
-    plan: starter # Change to 'pro' for production
+    plan: starter # Use 'starter' or 'pro' for production
     region: singapore
     buildCommand: npm install
     startCommand: npm start
@@ -20,7 +23,7 @@ services:
   - type: worker
     name: beep-chatbot-worker
     env: node
-    plan: starter # Change to 'pro' for production
+    plan: starter # Use 'starter' or 'pro' for production
     region: singapore
     buildCommand: npm install
     startCommand: npm run start:worker
@@ -35,9 +38,15 @@ services:
 databases:
   - name: beep-redis
     type: redis
-    plan: starter # Change to 'pro' for production
+    plan: starter # Use 'starter' or 'pro' for production
     region: singapore
     ipAllowList: [] # Allow connections from Render services
+
+# FOR DEVELOPMENT:
+# Don't use this Blueprint. Instead:
+# 1. Create services manually with -dev suffix
+# 2. Use FREE plan for all services
+# 3. See RENDER_DEPLOYMENT_GUIDE.md for details
 
 # Environment variable groups
 envVarGroups:

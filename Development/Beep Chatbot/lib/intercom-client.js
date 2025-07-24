@@ -13,6 +13,7 @@ class IntercomClient {
         this.baseURL = 'https://api.intercom.io';
         this.accessToken = process.env.INTERCOM_ACCESS_TOKEN;
         this.botAdminId = process.env.INTERCOM_BOT_ADMIN_ID;
+        this.mockMode = process.env.NODE_ENV === 'test' || process.env.USE_MOCK_SERVICES === 'true';
         
         this.client = axios.create({
             baseURL: this.baseURL,
@@ -26,6 +27,11 @@ class IntercomClient {
     }
     
     async sendReply(conversationId, message) {
+        if (this.mockMode) {
+            logger.info(`[MOCK] Sending reply to conversation ${conversationId}:`, message);
+            return { id: `reply-${Date.now()}`, conversation_id: conversationId, body: message };
+        }
+        
         try {
             const response = await this.client.post(
                 `/conversations/${conversationId}/reply`,
@@ -44,6 +50,11 @@ class IntercomClient {
             logger.error('Failed to send Intercom reply:', error.response?.data || error.message);
             throw error;
         }
+    }
+    
+    // Alias methods for compatibility
+    async replyToConversation(conversationId, message) {
+        return this.sendReply(conversationId, message);
     }
     
     async addNote(conversationId, note) {
@@ -97,6 +108,11 @@ class IntercomClient {
     }
     
     async assignToTeam(conversationId, teamId) {
+        if (this.mockMode) {
+            logger.info(`[MOCK] Assigning conversation ${conversationId} to team ${teamId}`);
+            return { id: conversationId, assignee_id: teamId };
+        }
+        
         try {
             const response = await this.client.put(
                 `/conversations/${conversationId}`,
@@ -113,6 +129,11 @@ class IntercomClient {
             logger.error('Failed to assign conversation:', error.response?.data || error.message);
             throw error;
         }
+    }
+    
+    // Alias method for compatibility
+    async addTag(conversationId, tagName) {
+        return this.tagConversation(conversationId, [tagName]);
     }
     
     async getConversation(conversationId) {
@@ -164,4 +185,8 @@ class IntercomClient {
     }
 }
 
-module.exports = { IntercomClient };
+// Export instance for backward compatibility
+const intercomClient = new IntercomClient();
+
+module.exports = intercomClient;
+module.exports.IntercomClient = IntercomClient;
