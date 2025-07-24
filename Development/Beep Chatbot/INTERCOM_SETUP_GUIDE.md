@@ -1,17 +1,25 @@
-# Intercom Setup Guide for BEEP Chatbot
+# Intercom Setup Guide for BEEP Chatbot (Development Environment)
 
-This guide walks you through all the steps needed to set up Intercom and other services for the BEEP Chatbot.
+This guide walks you through setting up the BEEP Chatbot in a **development workspace** where you can safely experiment before moving to production.
+
+⚠️ **Important**: We're setting everything up in a development environment first:
+- Development Intercom workspace
+- Development Render services  
+- Development Neon PostgreSQL database
+- This is a safe space to test and experiment!
 
 ## 📋 Prerequisites Checklist
 
 ### Intercom Setup Tasks
 
-#### 1. Create Intercom Developer App
-- [ ] Go to https://app.intercom.com/a/apps/YOUR_APP_ID/developer-hub
+#### 1. Create Intercom Developer App (Development)
+- [ ] Go to your **development** Intercom workspace
+- [ ] Navigate to https://app.intercom.com/a/apps/YOUR_DEV_APP_ID/developer-hub
 - [ ] Click "New app" 
-- [ ] Name it: "BEEP Order Status Bot"
-- [ ] Choose "Private app" (for internal use only)
+- [ ] Name it: "BEEP Bot - Development"
+- [ ] Choose "Private app" (for internal testing)
 - [ ] Save the app
+- [ ] Note: This is separate from production - safe to experiment!
 
 #### 2. Get OAuth Access Token
 - [ ] In your developer app, go to "Authentication"
@@ -24,23 +32,26 @@ This guide walks you through all the steps needed to set up Intercom and other s
   - ✅ Read teams
 - [ ] Copy the token → Save as `INTERCOM_ACCESS_TOKEN`
 
-#### 3. Configure Webhook
-- [ ] First deploy to Render (see Deployment section below)
+#### 3. Configure Webhook (After Render Deployment)
+- [ ] First deploy to Render development environment (see below)
 - [ ] In your developer app, go to "Webhooks"
 - [ ] Click "New webhook"
-- [ ] Set webhook URL: `https://YOUR-APP-NAME.onrender.com/webhook`
+- [ ] Set webhook URL: `https://beep-chatbot-api-dev.onrender.com/webhook`
+  - Note: We'll use `-dev` suffix for all development services
+  - Important: Include `api` in the URL: `beep-chatbot-api-dev`
 - [ ] Select topic: `conversation.user.replied`
 - [ ] Save webhook
 - [ ] Copy the webhook secret → Save as `WEBHOOK_SECRET`
 
-#### 4. Create Bot Admin User
+#### 4. Create Bot Admin User (Development)
 - [ ] Go to Settings → Teammates
 - [ ] Create new teammate:
-  - Name: "BEEP Bot"
-  - Email: bot@yourdomain.com
+  - Name: "BEEP Bot (Dev)"
+  - Email: bot-dev@yourdomain.com
   - Role: Admin (or custom role with conversation access)
 - [ ] Get the admin ID from the teammate's URL or API
 - [ ] Save as `INTERCOM_BOT_ADMIN_ID`
+- [ ] This bot is only for development testing
 
 #### 5. Get Support Team ID
 - [ ] Go to Settings → Teams
@@ -79,29 +90,28 @@ Create these tags in Settings → Tags:
 - [ ] Get JWT token → Save as `IST_API_KEY`
 - [ ] Confirm API URL → Save as `IST_API_URL`
 
-### Infrastructure Setup
+### Infrastructure Setup (Development Environment)
 
-#### 10. Neon PostgreSQL Database
+#### 10. Neon PostgreSQL Database (Development)
 - [ ] Go to https://neon.tech
-- [ ] Create new project: "beep-chatbot"
+- [ ] Create new project: "beep-chatbot-dev"
 - [ ] Choose region: Singapore (or closest)
+- [ ] Branch: Keep default "main" branch for dev
 - [ ] Copy connection string → Save as `DATABASE_URL`
 - [ ] Enable connection pooling
+- [ ] Note: This is your development database - safe to experiment!
+- [ ] Free tier is perfect for development
 
 #### 11. Redis Setup (Choose one)
 
-**Option A: Render Redis**
+**Render Redis (Development)**
 - [ ] Go to https://render.com
 - [ ] Create new Redis instance
-- [ ] Choose plan: Starter or Pro
+- [ ] Name: "beep-redis-dev"
+- [ ] Choose plan: **Free** (perfect for development)
 - [ ] Region: Singapore
-- [ ] Copy Redis URL → Save as `REDIS_URL`
-
-**Option B: Upstash Redis**
-- [ ] Go to https://upstash.com
-- [ ] Create new Redis database
-- [ ] Region: ap-southeast-1 (Singapore)
-- [ ] Copy Redis URL → Save as `REDIS_URL`
+- [ ] Copy Internal Redis URL → Save as `REDIS_URL`
+- [ ] Note: Free tier has 25MB storage - plenty for dev testing!
 
 ## 🔧 Local Development Setup
 
@@ -125,11 +135,11 @@ NODE_ENV=development
 PORT=3000
 LOG_LEVEL=info
 
-# Database
-DATABASE_URL=postgresql://user:password@ep-xxx.ap-southeast-1.aws.neon.tech/beep-chatbot?sslmode=require
+# Database (Development)
+DATABASE_URL=postgresql://user:password@ep-xxx.ap-southeast-1.aws.neon.tech/beep-chatbot-dev?sslmode=require
 
-# Redis
-REDIS_URL=redis://default:password@redis.render.com:6379
+# Redis (Development - Render Internal URL)
+REDIS_URL=redis://red-xxx.render.com:6379
 
 # Intercom Configuration
 INTERCOM_ACCESS_TOKEN=dG9rOmFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6...
@@ -166,43 +176,43 @@ npm run migrate
 npm run dev:all
 ```
 
-## 🚀 Deployment to Render (Required First)
+## 🚀 Development Deployment to Render
 
-Since you're using Render instead of ngrok, you'll need to deploy first before configuring the webhook:
+We'll deploy everything to a development environment first - this is your safe space to experiment!
 
-### 1. Initial Render Deployment
+### 1. Initial Render Development Deployment
 
-#### Option A: Using Render Dashboard
+#### Using Render Dashboard (Development Services)
 1. Go to https://render.com
 2. Connect your GitHub repository
 3. Create New Web Service:
-   - Name: `beep-chatbot-api`
+   - Name: `beep-chatbot-api-dev`
    - Environment: Node
    - Build Command: `npm install`
    - Start Command: `npm start`
-   - Add environment variables (use placeholder values for now)
+   - Plan: **Free** (perfect for development)
+   - Add environment variables (use test/placeholder values)
 4. Create Background Worker:
-   - Name: `beep-chatbot-worker`
+   - Name: `beep-chatbot-worker-dev`
    - Environment: Node
    - Build Command: `npm install`
    - Start Command: `npm run start:worker`
+   - Plan: **Free**
    - Same environment variables as API
 
-#### Option B: Using render.yaml (Recommended)
-1. The repository already includes `render.yaml`
-2. In Render Dashboard:
-   - New → Blueprint
-   - Connect GitHub repository
-   - Render will auto-detect the render.yaml
-   - Follow the prompts
+⚠️ **Development Notes**: 
+- Free tier services sleep after 15 minutes of inactivity - that's normal!
+- First request after sleep takes 30-60 seconds to wake up
+- This is perfect for development testing and costs $0
+- Logs are retained even when services sleep
 
-### 2. Get Your Render URLs
+### 2. Get Your Development URLs
 After deployment, you'll have:
-- API URL: `https://beep-chatbot-api.onrender.com`
-- Use this for your Intercom webhook
+- API URL: `https://beep-chatbot-api-dev.onrender.com`
+- This is your development webhook URL
 
-### 3. Configure Webhook with Render URL
-Now go back to Intercom and set the webhook URL to your Render deployment.
+### 3. Configure Webhook with Development URL
+Now go back to your development Intercom workspace and set the webhook URL.
 
 ## 🧪 Testing Your Deployment
 
@@ -211,13 +221,21 @@ Once deployed to Render:
 
 1. **Check Health Endpoint**
    ```bash
-   curl https://beep-chatbot-api.onrender.com/health
+   curl https://beep-chatbot-api-dev.onrender.com/health
    ```
+   Note: First request might take 30-60 seconds if service was sleeping
 
 2. **Test Webhook Directly**
    ```bash
-   # Update WEBHOOK_URL in test script to your Render URL
-   WEBHOOK_URL=https://beep-chatbot-api.onrender.com/webhook npm run test:webhook
+   # Update WEBHOOK_URL to your development Render URL
+   WEBHOOK_URL=https://beep-chatbot-api-dev.onrender.com/webhook npm run test:webhook
+   
+   # Or use the --url flag:
+   npm run test:webhook -- --url=https://beep-chatbot-api-dev.onrender.com/webhook
+   
+   # Test different scenarios:
+   npm run test:webhook -- --url=https://beep-chatbot-api-dev.onrender.com/webhook --scenario=foodpanda
+   npm run test:webhook -- --url=https://beep-chatbot-api-dev.onrender.com/webhook --scenario=order-not-found
    ```
 
 3. **Monitor Logs in Render**
@@ -279,6 +297,35 @@ SELECT * FROM hourly_metrics ORDER BY hour DESC LIMIT 24;
 - **Neon Support**: https://neon.tech/docs
 - **Render Support**: https://render.com/docs
 
+## 🚀 Moving to Production (After Development Testing)
+
+Once you've tested everything in the development environment and are ready for production:
+
+### Production Deployment Steps
+1. **Create Production Services**:
+   - New Neon project: "beep-chatbot-prod"
+   - New Render services without "-dev" suffix
+   - Upgrade to paid plans for always-on service
+
+2. **Production Intercom Setup**:
+   - Use production Intercom workspace
+   - Create new production app
+   - Generate production credentials
+
+3. **Environment Separation**:
+   - Development: beep-chatbot-api-dev.onrender.com
+   - Production: beep-chatbot-api.onrender.com
+   - Never mix credentials between environments!
+
+4. **Database Migration**:
+   - Export any test data worth keeping
+   - Set up fresh production database
+   - Run migrations on production
+
 ---
 
-Remember to keep all credentials secure and never commit them to version control!
+Remember:
+- 🧪 **Development First**: Test everything in dev environment
+- 🔐 **Keep Credentials Separate**: Dev and prod credentials should never mix
+- 📝 **Document Changes**: Track what works in dev before moving to prod
+- 🎯 **Safe to Experiment**: Break things in dev, not in prod!

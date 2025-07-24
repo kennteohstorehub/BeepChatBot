@@ -24,67 +24,96 @@ This will start:
 ```bash
 # In another terminal, test with mock order
 npm run test:webhook -- --scenario=order-status
+
+# Or test with a specific URL:
+npm run test:webhook -- --url=http://localhost:3000/webhook --scenario=order-status
 ```
 
-## 📋 For Production Setup
+## 📋 For Development Setup (Safe Environment)
 
-Follow these steps in order:
+We're setting everything up in a **development environment first** - this is your safe space to experiment!
 
-### 1. Intercom Configuration Checklist
+### 1. Development Infrastructure Setup
 
-Run the setup helper:
-```bash
-npm run setup
-```
+Create your development services:
 
-Or manually configure these in Intercom:
+- [ ] **Neon PostgreSQL** 
+  - Create project: "beep-chatbot-dev"
+  - Free tier is perfect
+  - https://neon.tech
+  
+- [ ] **Render Services**
+  - Create manually (not Blueprint)
+  - Use FREE tier for all:
+    - beep-chatbot-api-dev
+    - beep-chatbot-worker-dev
+    - beep-redis-dev
 
-- [ ] Create Developer App in Intercom
-- [ ] Generate OAuth Access Token with required permissions
-- [ ] Set up Webhook with topic `conversation.user.replied`
-- [ ] Create Bot Admin User
+### 2. Development Intercom Setup
+
+In your development Intercom workspace:
+
+- [ ] Create Developer App named "BEEP Bot - Development"
+- [ ] Generate OAuth Access Token
+- [ ] Create Bot Admin User "BEEP Bot (Dev)"
 - [ ] Get Support Team ID
 - [ ] Create required tags
 
-### 2. External Services
-
-You'll need accounts and API credentials for:
-
-- [ ] **Neon PostgreSQL** - https://neon.tech
-- [ ] **Redis** - Render or Upstash
-- [ ] **Lalamove API** - Partner account required
-- [ ] **Foodpanda API** - Contact partner support
-- [ ] **IST API** - Internal StoreHub service
-
-### 3. Deploy to Render First
-
-Since you're using Render, you need to deploy before setting up Intercom webhooks:
+### 3. Deploy and Configure
 
 ```bash
-# 1. Configure your .env with real credentials
-npm run setup
+# 1. Deploy to Render FIRST
+# Create services manually in Render Dashboard
+# All with -dev suffix, all FREE tier
 
-# 2. Deploy to Render
-# Option A: Use Render Dashboard to create Blueprint from your repo
-# Option B: Use Render CLI
-# The render.yaml file is already configured in the repo
+# 2. Get your development URLs:
+# API: https://beep-chatbot-api-dev.onrender.com
+# This is your webhook URL
 
-# 3. After deployment, get your Render URL:
-# https://beep-chatbot-api.onrender.com
+# 3. Configure Intercom webhook
+# Use your development Render URL
 
-# 4. Configure Intercom webhook with Render URL
-# Go to Intercom Developer Hub and set webhook URL
+# 4. Update environment variables in Render
+# Can use mock API keys initially
 ```
+
+### 4. Test Your Development Setup
+
+```bash
+# Test webhook (service might need to wake up first - 30-60 seconds)
+WEBHOOK_URL=https://beep-chatbot-api-dev.onrender.com/webhook npm run test:webhook
+
+# Or use the --url flag:
+npm run test:webhook -- --url=https://beep-chatbot-api-dev.onrender.com/webhook
+
+# Test different scenarios:
+npm run test:webhook -- --url=https://beep-chatbot-api-dev.onrender.com/webhook --scenario=foodpanda
+npm run test:webhook -- --url=https://beep-chatbot-api-dev.onrender.com/webhook --scenario=escalation
+```
+
+## 🚀 Moving to Production (Later)
+
+Once everything works in development:
+1. Create new production services (without -dev suffix)
+2. Use production Intercom workspace
+3. Upgrade to paid Render plans
+4. Use real API credentials
 
 ## 🧪 Testing Order Queries
 
-### With Mock Server:
+### With Mock Server (Local Development):
 ```bash
 # These orders are available in mock mode:
 - LM12345678    # Lalamove order (picked up)
 - FP1234567890  # Foodpanda order (picked up)  
 - BEP88888888   # Internal order
 ```
+
+### With Development Render:
+Once deployed to Render development environment:
+1. Free tier services sleep after 15 minutes - first request takes 30-60 seconds
+2. Use the test:webhook script to send test payloads
+3. Monitor logs in Render dashboard for debugging
 
 ### Test Scenarios:
 ```bash
